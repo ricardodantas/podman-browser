@@ -109,7 +109,7 @@ Uses `mcr.microsoft.com/playwright:v1.50.0-noble` with `playwright@1.50.0` npm p
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+GPL-3.0 License - see [LICENSE](LICENSE) file.
 
 ## Contributing
 
