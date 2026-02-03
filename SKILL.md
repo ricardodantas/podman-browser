@@ -4,17 +4,17 @@ Headless browser automation using Podman + Playwright for scraping JavaScript-re
 
 ## Requirements
 
-- Podman 5.x+
-- Node.js 18+
-- No Docker required
+- Podman 5.x+ installed and running
+- Node.js 18+ (for running the CLI)
+- Internet connection (first run pulls ~1.5GB container image)
 
 ## Installation
 
-The script is at `skills/podman-browser/browse.js`. Create a symlink for easy access:
+Create a symlink for easy access:
 
 ```bash
-ln -sf "$(pwd)/skills/podman-browser/browse.js" ~/.local/bin/podman-browse
-chmod +x skills/podman-browser/browse.js
+chmod +x browse.js
+ln -sf "$(pwd)/browse.js" ~/.local/bin/podman-browse
 ```
 
 First run will pull the Playwright container image (~1.5GB).

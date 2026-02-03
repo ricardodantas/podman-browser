@@ -13,7 +13,7 @@ This skill runs a headless Chromium browser inside a Podman container using Micr
 ## Prerequisites
 
 - **Podman 5.x+** installed and running
-- No Docker required
+- **Node.js 18+** (for running the CLI)
 - Internet connection (first run pulls ~1.5GB container image)
 
 ## Installation
@@ -29,7 +29,8 @@ cp -r podman-browser ~/.openclaw/workspace/skills/
 Create a symlink to make it available in your PATH:
 
 ```bash
-ln -sf ~/.openclaw/workspace/skills/podman-browser/podman-browse ~/.local/bin/podman-browse
+ln -sf ~/.openclaw/workspace/skills/podman-browser/browse.js ~/.local/bin/podman-browse
+chmod +x ~/.openclaw/workspace/skills/podman-browser/browse.js
 ```
 
 ### Standalone usage
@@ -39,8 +40,8 @@ Clone this repo and add to your PATH:
 ```bash
 git clone https://github.com/ricardodantas/podman-browser.git
 cd podman-browser
-chmod +x podman-browse
-ln -sf "$(pwd)/podman-browse" ~/.local/bin/podman-browse
+chmod +x browse.js
+ln -sf "$(pwd)/browse.js" ~/.local/bin/podman-browse
 ```
 
 ## Usage
@@ -50,6 +51,9 @@ ln -sf "$(pwd)/podman-browse" ~/.local/bin/podman-browse
 ```bash
 # Get rendered text content from a page
 podman-browse "https://example.com"
+
+# Or run directly
+./browse.js "https://example.com"
 ```
 
 ### Options
@@ -90,8 +94,7 @@ podman-browse --wait 5000 "https://news.ycombinator.com/newest"
 
 | File | Description |
 |------|-------------|
-| `podman-browse` | Main bash script (entry point) |
-| `browse.js` | Node.js Playwright script (mounted into container) |
+| `browse.js` | Self-contained Node.js CLI (handles args + spawns podman) |
 | `SKILL.md` | OpenClaw skill documentation |
 
 ## Container Image
