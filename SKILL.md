@@ -5,17 +5,23 @@ Headless browser automation using Podman + Playwright for scraping JavaScript-re
 ## Requirements
 
 - Podman 5.x+
+- Node.js 18+
 - No Docker required
 
 ## Installation
 
-The script is at `skills/podman-browser/podman-browse`. A symlink is created at `~/.local/bin/podman-browse`.
+The script is at `skills/podman-browser/browse.js`. Create a symlink for easy access:
+
+```bash
+ln -sf "$(pwd)/skills/podman-browser/browse.js" ~/.local/bin/podman-browse
+chmod +x skills/podman-browser/browse.js
+```
 
 First run will pull the Playwright container image (~1.5GB).
 
 ## Commands
 
-### `podman-browse`
+### `podman-browse` (or `./browse.js`)
 
 Fetch a JavaScript-rendered page and return its text content.
 
@@ -31,20 +37,17 @@ podman-browse "https://example.com"
 
 **Examples:**
 ```bash
-# Get rendered text content
-podman-browse "https://sl.se/reseplanering/trafiklaget"
+# Get rendered text content from Hacker News
+podman-browse "https://news.ycombinator.com"
 
 # Get raw HTML
-podman-browse --html "https://example.com"
+podman-browse --html "https://news.ycombinator.com"
 
 # Wait for specific element
-podman-browse --selector ".traffic-info" "https://sl.se/reseplanering/trafiklaget"
+podman-browse --selector ".itemlist" "https://news.ycombinator.com"
 
 # Extra wait time for slow pages
-podman-browse --wait 5000 "https://example.com"
-
-# SL train status (for HEARTBEAT.md)
-podman-browse --wait 3000 "https://sl.se/reseplanering/trafiklaget?locationType=TRANSPORT_TYPE&transportType=TRAIN&name=Pendelt%C3%A5g"
+podman-browse --wait 5000 "https://news.ycombinator.com/newest"
 ```
 
 ## How It Works
@@ -60,8 +63,7 @@ Uses `mcr.microsoft.com/playwright:v1.50.0-noble` with `playwright@1.50.0` npm p
 
 ## Files
 
-- `podman-browse` - Main bash script
-- `browse.js` - Node.js Playwright script (mounted into container)
+- `browse.js` - Self-contained Node.js CLI (handles args + spawns podman)
 - `SKILL.md` - This documentation
 
 ## Notes

@@ -1,3 +1,67 @@
+#!/usr/bin/env node
+// podman-browse - Headless browser automation using Podman + Playwright
+// Fetches JavaScript-rendered pages and returns text or HTML content
+
+const { spawn } = require('child_process');
+const path = require('path');
+
+const IMAGE = 'mcr.microsoft.com/playwright:v1.50.0-noble';
+const PLAYWRIGHT_VERSION = '1.50.0';
+
+// Defaults
+let waitMs = 2000;
+let outputMode = 'text';
+let selector = '';
+let url = '';
+
+// Parse arguments
+const args = process.argv.slice(2);
+for (let i = 0; i < args.length; i++) {
+    switch (args[i]) {
+        case '--html':
+            outputMode = 'html';
+            break;
+        case '--wait':
+            waitMs = parseInt(args[++i], 10);
+            break;
+        case '--selector':
+            selector = args[++i];
+            break;
+        case '-h':
+        case '--help':
+            console.log(`Usage: browse.js [OPTIONS] URL
+
+Fetch a JavaScript-rendered page using Playwright in Podman.
+
+Options:
+  --html              Return raw HTML instead of text
+  --wait <ms>         Wait time after load (default: 2000ms)
+  --selector <css>    Wait for specific element before capturing
+  -h, --help          Show this help
+
+Examples:
+  ./browse.js "https://example.com"
+  ./browse.js --html "https://example.com"
+  ./browse.js --selector ".content" --wait 5000 "https://example.com"`);
+            process.exit(0);
+        default:
+            if (!args[i].startsWith('-')) {
+                url = args[i];
+            } else {
+                console.error(`Unknown option: ${args[i]}`);
+                process.exit(1);
+            }
+    }
+}
+
+if (!url) {
+    console.error('Error: URL is required');
+    console.error('Usage: browse.js [OPTIONS] URL');
+    process.exit(1);
+}
+
+// The actual Playwright script to run inside the container
+const playwrightScript = `
 const { chromium } = require('playwright');
 
 (async () => {
@@ -5,11 +69,6 @@ const { chromium } = require('playwright');
     const waitMs = parseInt(process.env.WAIT_MS || '2000', 10);
     const outputMode = process.env.OUTPUT_MODE || 'text';
     const selector = process.env.SELECTOR || '';
-
-    if (!url) {
-        console.error('Error: TARGET_URL environment variable is required');
-        process.exit(1);
-    }
 
     const browser = await chromium.launch({
         headless: true,
@@ -24,7 +83,6 @@ const { chromium } = require('playwright');
 
         await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
-        // Wait for selector if specified
         if (selector) {
             try {
                 await page.waitForSelector(selector, { timeout: 10000 });
@@ -33,16 +91,13 @@ const { chromium } = require('playwright');
             }
         }
 
-        // Additional wait for JS to settle
         await page.waitForTimeout(waitMs);
 
         if (outputMode === 'html') {
             const html = await page.content();
             console.log(html);
         } else {
-            // Get text content, excluding script/style
             const text = await page.evaluate(() => {
-                // Remove script and style elements
                 const scripts = document.querySelectorAll('script, style, noscript');
                 scripts.forEach(el => el.remove());
                 return document.body.innerText;
@@ -56,3 +111,29 @@ const { chromium } = require('playwright');
         await browser.close();
     }
 })();
+`;
+
+// Run Playwright in Podman container
+const podmanArgs = [
+    'run', '--rm', '-i',
+    '--ipc=host',
+    '--init',
+    '-e', `TARGET_URL=${url}`,
+    '-e', `WAIT_MS=${waitMs}`,
+    '-e', `OUTPUT_MODE=${outputMode}`,
+    '-e', `SELECTOR=${selector}`,
+    IMAGE,
+    '/bin/bash', '-c',
+    `cd /tmp && npm init -y >/dev/null 2>&1 && npm install playwright@${PLAYWRIGHT_VERSION} >/dev/null 2>&1 && node -e '${playwrightScript.replace(/'/g, "'\\''")}'`
+];
+
+const proc = spawn('podman', podmanArgs, { stdio: ['inherit', 'inherit', 'inherit'] });
+
+proc.on('close', (code) => {
+    process.exit(code || 0);
+});
+
+proc.on('error', (err) => {
+    console.error(`Failed to start podman: ${err.message}`);
+    process.exit(1);
+});
