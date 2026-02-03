@@ -64,20 +64,17 @@ podman-browse "https://example.com"
 ### Examples
 
 ```bash
-# Get rendered text content
-podman-browse "https://example.com"
+# Get rendered text content from Hacker News
+podman-browse "https://news.ycombinator.com"
 
 # Get raw HTML
-podman-browse --html "https://example.com"
+podman-browse --html "https://news.ycombinator.com"
 
 # Wait for specific element
-podman-browse --selector ".content" "https://example.com"
+podman-browse --selector ".itemlist" "https://news.ycombinator.com"
 
 # Extra wait time for slow pages
-podman-browse --wait 5000 "https://example.com"
-
-# Real-world example: Stockholm public transit status
-podman-browse --wait 3000 "https://sl.se/reseplanering/trafiklaget"
+podman-browse --wait 5000 "https://news.ycombinator.com/newest"
 ```
 
 ## How it works
